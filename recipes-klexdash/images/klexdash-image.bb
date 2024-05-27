@@ -18,10 +18,6 @@ IMAGE_FEATURES += " \
                                                        '', d), d)} \
 "
 
-G2D_SAMPLES                 = ""
-G2D_SAMPLES_imxgpu2d        = "imx-g2d-samples"
-G2D_SAMPLES_imxgpu2d_imxdpu = ""
-
 IMAGE_INSTALL += " \
     ${@bb.utils.contains('DISTRO_FEATURES', 'x11 wayland', 'weston-xwayland xterm', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'somlabs-demo', '', d)} \
@@ -37,10 +33,10 @@ IMAGE_INSTALL += " \
     packagegroup-imx-security \
     packagegroup-imx-ml \
     packagegroup-qt5-imx \
+	packagegroup-qt5-webengine \
     tzdata \
     packagegroup-fsl-gstreamer1.0 \
     packagegroup-fsl-gstreamer1.0-full \
-    {G2D_SAMPLES} \
     iperf3 \
     htop \
     nvme-cli \
