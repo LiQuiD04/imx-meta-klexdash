@@ -3,7 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 KERNEL_SRC = "git://github.com/SoMLabs/somlabs-linux-imx.git;protocol=http"
 SRC_URI = " \
 		${KERNEL_SRC};branch=${KERNEL_BRANCH} \
-		file://0001-tsc-ilitek.patch \
+		file://0001-device-tree.patch \
 		file://0002-defconfig.patch \
 		"
 
