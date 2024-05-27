@@ -1,0 +1,146 @@
+diff --git a/arch/arm/dts/imx8mm-visionsom.dts b/arch/arm/dts/imx8mm-visionsom.dts
+index 96099c8..cb6fa5a 100644
+--- a/arch/arm/dts/imx8mm-visionsom.dts
++++ b/arch/arm/dts/imx8mm-visionsom.dts
+@@ -73,22 +73,18 @@
+ 
+         pinctrl_fec1: fec1grp {
+             fsl,pins = <
+-                MX8MM_IOMUXC_ENET_MDC_ENET1_MDC		        0x3
+-                MX8MM_IOMUXC_ENET_MDIO_ENET1_MDIO	        0x3
+-                MX8MM_IOMUXC_ENET_TD3_ENET1_RGMII_TD3	    0x1f
+-                MX8MM_IOMUXC_ENET_TD2_ENET1_RGMII_TD2	    0x1f
+-                MX8MM_IOMUXC_ENET_TD1_ENET1_RGMII_TD1	    0x1f
+-                MX8MM_IOMUXC_ENET_TD0_ENET1_RGMII_TD0	    0x1f
+-                MX8MM_IOMUXC_ENET_RD3_ENET1_RGMII_RD3	    0x91
+-                MX8MM_IOMUXC_ENET_RD2_ENET1_RGMII_RD2	    0x91
+-                MX8MM_IOMUXC_ENET_RD1_ENET1_RGMII_RD1	    0x91
+-                MX8MM_IOMUXC_ENET_RD0_ENET1_RGMII_RD0	    0x91
+-                MX8MM_IOMUXC_ENET_TXC_ENET1_RGMII_TXC	    0x1f
+-                MX8MM_IOMUXC_ENET_RXC_ENET1_RGMII_RXC	    0x91
+-                MX8MM_IOMUXC_ENET_RX_CTL_ENET1_RGMII_RX_CTL	0x91
+-                MX8MM_IOMUXC_ENET_TX_CTL_ENET1_RGMII_TX_CTL	0x1f
+-                MX8MM_IOMUXC_GPIO1_IO00_GPIO1_IO0           0x19    /* phy reset */
+-                MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8		    0x1c4   /* phy int */
++                MX8MM_IOMUXC_ENET_MDC_ENET1_MDC                 0x3
++                MX8MM_IOMUXC_ENET_MDIO_ENET1_MDIO               0x3
++                MX8MM_IOMUXC_ENET_RD0_ENET1_RGMII_RD0           0x56
++                MX8MM_IOMUXC_ENET_RD1_ENET1_RGMII_RD1           0x56
++                MX8MM_IOMUXC_ENET_RXC_ENET1_RX_ER               0x56
++                MX8MM_IOMUXC_ENET_RX_CTL_ENET1_RGMII_RX_CTL     0x56
++                MX8MM_IOMUXC_ENET_TD0_ENET1_RGMII_TD0           0x56
++                MX8MM_IOMUXC_ENET_TD1_ENET1_RGMII_TD1           0x56
++                MX8MM_IOMUXC_ENET_TD2_ENET1_TX_CLK              0x4000001f
++                MX8MM_IOMUXC_ENET_TX_CTL_ENET1_RGMII_TX_CTL     0x56
++                MX8MM_IOMUXC_ENET_RD3_GPIO1_IO29                0x6        /* PHY Reset */
++                MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8               0x56       /* PHY INT   */
+             >;
+         };
+ 
+@@ -364,19 +360,24 @@
+ &fec1 {
+     pinctrl-names = "default";
+     pinctrl-0 = <&pinctrl_fec1>;
+-    phy-mode = "rgmii-id";
++    phy-mode = "rmii";
+     phy-handle = <&ethphy0>;
+-    phy-reset-gpios = <&gpio1 0 GPIO_ACTIVE_LOW>; /* GPIO1_0 */
++    phy-reset-gpios = <&gpio1 29 GPIO_ACTIVE_LOW>; /* GPIO1_0 */
++    phy-reset-duration = <25>;
+     fsl,magic-packet;
+     status = "okay";
+ 
+     mdio {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+-        ethphy0: ethernet-phy@0 {
++        ethphy0: ethernet-phy@1 {
+             compatible = "ethernet-phy-ieee802.3-c22";
+-            reg = <0>;
++            reg = <1>;
++            smsc,disable-energy-detect;
++            interrupt-parent = <&gpio1>;
++            interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
+         };
+     };
+ };
+diff --git "a/board/somlabs/visionsom-8mm/visionsom-8mm.c" "b/board/somlabs/visionsom-8mm/visionsom-8mm.c"
+index 15e7049..ba5a56f 100644
+--- "a/board/somlabs/visionsom-8mm/visionsom-8mm.c"
++++ "b/board/somlabs/visionsom-8mm/visionsom-8mm.c"
+@@ -22,6 +22,7 @@
+ #include <asm/mach-imx/dma.h>
+ #include <power/pmic.h>
+ #include <fdt_support.h>
++#include <linux/delay.h>
+ 
+ #include <asm/mach-imx/boot_mode.h>
+ 
+@@ -46,15 +47,34 @@ int board_early_init_f(void)
+ #endif
+ 
+ #if IS_ENABLED(CONFIG_FEC_MXC)
++
++#define FEC_RST_PAD IMX_GPIO_NR(1, 29)
++static iomux_v3_cfg_t const fec1_rst_pads[] = {
++	IMX8MM_PAD_ENET_RD3_GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL),
++};
++
++static void setup_iomux_fec(void)
++{
++	imx_iomux_v3_setup_multiple_pads(fec1_rst_pads,
++					 ARRAY_SIZE(fec1_rst_pads));
++
++	gpio_request(FEC_RST_PAD, "fec1_rst");
++	gpio_direction_output(FEC_RST_PAD, 0);
++	udelay(2500);
++	gpio_direction_output(FEC_RST_PAD, 1);
++}
++
+ static int setup_fec(void)
+ {
+     struct iomuxc_gpr_base_regs *gpr =
+         (struct iomuxc_gpr_base_regs *)IOMUXC_GPR_BASE_ADDR;
+ 
+-    /* Use 125M anatop REF_CLK1 for ENET1, not from external */
+-    clrsetbits_le32(&gpr->gpr[1],
+-            IOMUXC_GPR_GPR1_GPR_ENET1_TX_CLK_SEL_MASK, 0);
+-    return set_clk_enet(ENET_125MHZ);
++    setup_iomux_fec();
++
++    /* Use 50M anatop REF_CLK1 for ENET1, not from external */
++    setbits_le32(&gpr->gpr[1],
++            IOMUXC_GPR_GPR1_GPR_ENET1_TX_CLK_SEL_MASK);
++    return set_clk_enet(ENET_50MHZ);
+ }
+ 
+ int board_phy_config(struct phy_device *phydev)
+diff --git a/include/configs/visionsom_8mm.h b/include/configs/visionsom_8mm.h
+index b8eabe4..35f7346 100644
+--- a/include/configs/visionsom_8mm.h
++++ b/include/configs/visionsom_8mm.h
+@@ -45,8 +45,8 @@
+ #if defined(CONFIG_FEC_MXC)
+ #define CONFIG_ETHPRIME                 "FEC"
+ #define PHY_ANEG_TIMEOUT 20000
+-#define CONFIG_FEC_XCV_TYPE             RGMII
+-#define CONFIG_FEC_MXC_PHYADDR          0
++#define CONFIG_FEC_XCV_TYPE             RMII
++#define CONFIG_FEC_MXC_PHYADDR          1
+ #define FEC_QUIRK_ENET_MAC
+ #define IMX_FEC_BASE			0x30BE0000
+ #endif	/* CONFIG_FEC_MXC */
+diff --git a/configs/visionsom_8mm_defconfig b/configs/visionsom_8mm_defconfig
+index 133b511..013b1e4 100644
+--- a/configs/visionsom_8mm_defconfig
++++ b/configs/visionsom_8mm_defconfig
+@@ -86,8 +86,7 @@ CONFIG_MMC_HS400_ES_SUPPORT=y
+ CONFIG_MMC_HS400_SUPPORT=y
+ CONFIG_FSL_USDHC=y
+ CONFIG_PHYLIB=y
+-CONFIG_PHY_MICREL_KSZ90X1=y
++CONFIG_PHY_SMSC=y
+ CONFIG_DM_ETH=y
+ CONFIG_FEC_MXC=y
+ CONFIG_RGMII=y
