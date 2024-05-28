@@ -1,5 +1,5 @@
 diff --git a/arch/arm64/configs/somlabs_8m_defconfig b/arch/arm64/configs/somlabs_8m_defconfig
-index d906255c683b..ebc12be080c2 100644
+index d906255c683b..8bbfa664ce84 100644
 --- a/arch/arm64/configs/somlabs_8m_defconfig
 +++ b/arch/arm64/configs/somlabs_8m_defconfig
 @@ -232,6 +232,7 @@ CONFIG_VIRTIO_BLK=y
@@ -26,6 +26,15 @@ index d906255c683b..ebc12be080c2 100644
  CONFIG_KEYBOARD_ADC=m
  CONFIG_KEYBOARD_GPIO=y
  CONFIG_KEYBOARD_RPMSG=y
+@@ -434,7 +437,7 @@ CONFIG_IMX_LCDIF_CORE=y
+ CONFIG_IMX_LCDIFV3_CORE=y
+ CONFIG_DRM=y
+ CONFIG_DRM_MALI_DISPLAY=m
+-CONFIG_DRM_PANEL_LVDS=m
++CONFIG_DRM_PANEL_LVDS=y
+ CONFIG_DRM_PANEL_SIMPLE=y
+ CONFIG_DRM_PANEL_POWERTIP_PH720128T003=y
+ CONFIG_DRM_DISPLAY_CONNECTOR=m
 @@ -485,7 +488,7 @@ CONFIG_SND=y
  CONFIG_SND_DYNAMIC_MINORS=y
  # CONFIG_SND_PCI is not set
