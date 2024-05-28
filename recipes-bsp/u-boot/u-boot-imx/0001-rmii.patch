@@ -117,9 +117,18 @@ index 15e7049f3c..ba5a56fe6f 100644
  
  int board_phy_config(struct phy_device *phydev)
 diff --git a/configs/visionsom_8mm_defconfig b/configs/visionsom_8mm_defconfig
-index 133b51120f..27978109c5 100644
+index 133b51120f..85899b2b95 100644
 --- a/configs/visionsom_8mm_defconfig
 +++ b/configs/visionsom_8mm_defconfig
+@@ -28,7 +28,7 @@ CONFIG_SPL_FIT_GENERATOR="arch/arm/mach-imx/mkimage_fit_atf.sh"
+ CONFIG_OF_BOARD_SETUP=y
+ CONFIG_OF_SYSTEM_SETUP=y
+ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/imx8m/imximage-8mm-lpddr4.cfg"
+-CONFIG_DEFAULT_FDT_FILE="visionsom-8mm.dtb"
++CONFIG_DEFAULT_FDT_FILE="klexdash.dtb"
+ CONFIG_BOARD_LATE_INIT=y
+ CONFIG_SPL_BOARD_INIT=y
+ CONFIG_SPL_SEPARATE_BSS=y
 @@ -88,6 +88,7 @@ CONFIG_FSL_USDHC=y
  CONFIG_PHYLIB=y
  CONFIG_PHY_MICREL=y
@@ -129,7 +138,7 @@ index 133b51120f..27978109c5 100644
  CONFIG_FEC_MXC=y
  CONFIG_RGMII=y
 diff --git a/include/configs/visionsom_8mm.h b/include/configs/visionsom_8mm.h
-index b8eabe4dc1..35f7346837 100644
+index b8eabe4dc1..69953e7fa8 100644
 --- a/include/configs/visionsom_8mm.h
 +++ b/include/configs/visionsom_8mm.h
 @@ -45,8 +45,8 @@
@@ -143,3 +152,14 @@ index b8eabe4dc1..35f7346837 100644
  #define FEC_QUIRK_ENET_MAC
  #define IMX_FEC_BASE			0x30BE0000
  #endif	/* CONFIG_FEC_MXC */
+@@ -61,8 +61,8 @@
+ 	"console=ttymxc3,115200 earlycon=ec_imx6q,0x30a60000,115200\0" \
+ 	"fdt_addr=0x43000000\0"			\
+ 	"fdt_high=0xffffffffffffffff\0"		\
+-	"fdt_file_custom=visionsom-8mm-custom.dtb\0" \
+-	"setfdtfile=setenv fdt_file visionsom-8mm-cb-${cb_type}${cb_disp}.dtb\0" \
++	"fdt_file_custom=klexdash_custom.dtb\0" \
++	"setfdtfile=setenv fdt_file klexdash.dtb\0" \
+ 	"initrd_addr=0x43800000\0"		\
+ 	"initrd_high=0xffffffffffffffff\0" \
+ 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \

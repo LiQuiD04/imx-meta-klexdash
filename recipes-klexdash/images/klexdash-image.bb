@@ -42,4 +42,5 @@ IMAGE_INSTALL += " \
     nvme-cli \
     hdparm \
     stress-ng \
+	u-boot-fw-utils \
 "
